@@ -1,10 +1,9 @@
-# Make Claude Code Free with DeepSeek V4
+# Make Claude Code Free/Cheaper with DeepSeek V4
 
-Claude Code is the best AI coding agent right now. The catch: **$200/month** for the Max plan, and the Pro plan rate-limits fast.
 
-This guide routes Claude Code's API calls through **DeepSeek V4 instead of Anthropic** — same Claude Code UI, same skills, same workflow, **~$7/month** for heavy daily use (DeepSeek is currently 75% off until May 5, 2026).
+This guide routes Claude Code's API calls through **DeepSeek V4 instead of Anthropic** — same Claude Code UI, same skills, same workflow.
 
-> **Live-tested April 2026** — same 3D Three.js prompt: Anthropic Opus 4.7 = **$1.14**, DeepSeek V4 Flash = **$0.012**. **95× cheaper**, both produce working playable demos.
+
 
 ---
 
@@ -57,7 +56,7 @@ claude --bare \
   "Build me a REST API with auth, JWT, and tests"
 ```
 
-That's it. Claude Code now talks to DeepSeek V4 Flash for **that one command**. Plain `claude` (without the flags) keeps using your normal backend.
+That's it. Claude Code now talks to DeepSeek V4 Flash (ignore that it says sonnet) for **that one command**. Plain `claude` (without the flags) keeps using your normal backend.
 
 The `--bare` flag is required — it tells Claude Code to read auth strictly from settings, not from OAuth keychain or other auto-detected providers.
 
@@ -103,22 +102,6 @@ Then:
 - `claude "Hard problem"` → your default backend
 
 Two commands, two backends, side-by-side in your shell history.
-
----
-
-## The 80/20 hybrid
-
-For most coding (refactors, tests, scaffolding, docs) — DeepSeek V4 matches or beats Opus at ~1% of the cost. For the genuinely hard 20% (architecture, complex debugging) — keep using your normal `claude`.
-
-| Task | Backend | Time | Cost |
-|---|---|---|---|
-| REST API + tests (FastAPI + JWT + bcrypt) | DeepSeek V4 Flash | 1m 15s | $0.0094 |
-| 3D Three.js walking world (WASD + collision + skybox) | Anthropic Opus 4.7 | 1m 30s | $1.14 |
-| 3D Three.js walking world (same prompt) | DeepSeek V4 Flash | 2m 02s | $0.012 |
-
-**95× cheaper for the same outcome.** Both Three.js builds produced working playable 3D demos with WASD movement, mouse look, collision detection, sunset skybox, and FPS counter.
-
-Heavy daily use lands at **~$7/MONTH** total on DeepSeek with the 75% off promo. (Math check: $7 per *month*, not per day. $7/day × 30 = $210, which would be more than Claude — the savings only work at the monthly figure.)
 
 ---
 
