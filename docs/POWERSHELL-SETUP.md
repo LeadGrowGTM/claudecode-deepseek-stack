@@ -6,7 +6,6 @@ Full setup for Windows users running Claude Code via PowerShell.
 
 - Claude Code installed (`claude --version`)
 - DeepSeek account + API key from `platform.deepseek.com`
-- Bun installed (`bun --version`) — used to run ccusage
 
 ## 1. Create Config Directory
 
@@ -17,9 +16,7 @@ icacls "$env:USERPROFILE\.config\mg-deepseek" /inheritance:r /grant:r "${env:USE
 
 ## 2. Create Settings Files
 
-Save both to `~/.config/mg-deepseek/`. Replace `sk-YOUR-KEY` with your DeepSeek key.
-
-**`deepseek-pro-settings.json`** (v4-pro, Opus equivalent):
+**`deepseek-pro-settings.json`** (v4-pro):
 ```json
 {
   "env": {
@@ -34,39 +31,16 @@ Save both to `~/.config/mg-deepseek/`. Replace `sk-YOUR-KEY` with your DeepSeek 
 }
 ```
 
-**`deepseek-flash-settings.json`** (v4-flash, Haiku equivalent): same structure, same key.
+**`deepseek-flash-settings.json`** (v4-flash): same structure, same key.
 
-## 3. Install ccusage
+## 3. Add to PowerShell Profile
 
-```powershell
-bun install -g ccusage
-```
+Find your profile: `echo $PROFILE`
 
-## 4. Add to PowerShell Profile
-
-Find your profile path: `echo $PROFILE`. Add the following:
-
-> **Why `--add-dir`?** The `--bare` flag (required for auth) also disables CLAUDE.md auto-discovery. `--add-dir` restores it.
->
-> **Why `[1m]` suffix?** DeepSeek v4 models support 1M token context. The `[1m]` suffix tells Claude Code to use a 1M context window client-side, preventing premature autocompact suggestions.
+> **Why `--add-dir "$PWD"`?** `--bare` disables CLAUDE.md auto-discovery. `--add-dir` restores it.
+> **Why `[1m]`?** DeepSeek v4 supports 1M token context. Without it Claude Code defaults to 200k and suggests premature autocompact.
 
 ```powershell
-function Get-WeeklySpend {
-    try {
-        $monday = (Get-Date).AddDays(-[int](Get-Date).DayOfWeek + 1).ToString("yyyyMMdd")
-        $raw = ccusage weekly -j --offline -s $monday 2>&1
-        $jsonStr = ($raw | Where-Object { $_ -notmatch 'WARN|INFO|Fetching|Loaded|Resolving|Resolved|Saved|\[ccusage\]' }) -join ""
-        $jsonStr = $jsonStr -replace '^\s*\[ccusage\][^\{]*', ''
-        $json = $jsonStr | ConvertFrom-Json
-        return [math]::Round($json.totals.totalCost, 2)
-    } catch { return 0 }
-}
-
-function Get-ThrottleStatus {
-    $spend = Get-WeeklySpend
-    return @{ Spend = $spend; Throttled = ($spend -gt 700) }
-}
-
 $script:ClaudeBin = "$env:USERPROFILE\.local\bin\claude.exe"
 
 function claude {
@@ -74,11 +48,11 @@ function claude {
     switch ($args[0]) {
         'dsp' {
             Write-Host ">> DEEPSEEK v4-PRO (Opus-tier, 1M ctx, ~30x cheaper)" -ForegroundColor Cyan
-            & $script:ClaudeBin --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model "claude-opus-4-6[1m]" --dangerously-skip-permissions --add-dir (Get-Location).Path @rest
+            & $script:ClaudeBin --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model "claude-opus-4-6[1m]" --dangerously-skip-permissions --add-dir "$PWD" @rest
         }
         'dsf' {
             Write-Host ">> DEEPSEEK v4-FLASH (Haiku-tier, 1M ctx, ~60x cheaper)" -ForegroundColor Green
-            & $script:ClaudeBin --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model "claude-haiku-4-5-20251001[1m]" --dangerously-skip-permissions --add-dir (Get-Location).Path @rest
+            & $script:ClaudeBin --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model "claude-haiku-4-5-20251001[1m]" --dangerously-skip-permissions --add-dir "$PWD" @rest
         }
         default { & $script:ClaudeBin @args }
     }
@@ -89,34 +63,12 @@ function ds-flash { claude dsf @args }
 Set-Alias dsp ds-pro
 Set-Alias dsf ds-flash
 
-function claude-sonnet {
-    claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
-}
+function claude-sonnet { claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args }
+function claude-opus   { claude --model claude-opus-4-6 --dangerously-skip-permissions @args }
+function cs            { claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args }
 
-function claude-opus {
-    $status = Get-ThrottleStatus
-    if ($status.Throttled) {
-        Write-Host "[$([math]::Round($status.Spend,2))/wk > `$700] Throttled -> DeepSeek v4-pro"
-        ds-pro @args
-    } else {
-        claude --model claude-opus-4-6 --dangerously-skip-permissions @args
-    }
-}
-
-function cs {
-    $status = Get-ThrottleStatus
-    if ($status.Throttled) {
-        Write-Host "[$([math]::Round($status.Spend,2))/wk > `$700] -> DeepSeek v4-pro"
-        ds-pro @args
-    } else {
-        claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
-    }
-}
-
-function deepseek-pro   { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model "claude-opus-4-6[1m]" --add-dir (Get-Location).Path @args }
-function deepseek-flash { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model "claude-haiku-4-5-20251001[1m]" --add-dir (Get-Location).Path @args }
-function claude-cheap     { deepseek-flash @args }
-function claude-pro-cheap { deepseek-pro @args }
+function deepseek-pro   { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model "claude-opus-4-6[1m]" --add-dir "$PWD" @args }
+function deepseek-flash { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model "claude-haiku-4-5-20251001[1m]" --add-dir "$PWD" @args }
 
 function rotate-deepseek-key {
     param([string]$NewKey)
@@ -125,30 +77,61 @@ function rotate-deepseek-key {
         "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json"
     )
     foreach ($file in $files) {
-        $content = Get-Content $file -Raw
-        $content = $content -replace 'sk-[a-f0-9]+', $NewKey
-        Set-Content $file $content
+        $c = Get-Content $file -Raw
+        $c = $c -replace 'sk-[a-f0-9]+', $NewKey
+        Set-Content $file $c
         Write-Host "Updated: $file"
     }
 }
 
 function usage {
-    $status = Get-ThrottleStatus
-    $pct = if ($status.Spend -gt 0) { [math]::Round(($status.Spend / 875) * 100, 1) } else { 0 }
-    $bar = "#" * [int]($pct / 5)
-    $throttled = if ($status.Throttled) { " [THROTTLED -> DeepSeek]" } else { "" }
-    Write-Host "Week: `$$($status.Spend) / ~`$875$throttled"
-    Write-Host "[$bar] $pct%"
+    try {
+        $monday = (Get-Date).AddDays(-[int](Get-Date).DayOfWeek + 1).ToString("yyyyMMdd")
+        $raw = ccusage weekly -j --offline -s $monday 2>&1
+        $jsonStr = ($raw | Where-Object { $_ -notmatch 'WARN|INFO|Fetching|Loaded|Resolving|Resolved|Saved|\[ccusage\]' }) -join ""
+        $json = $jsonStr | ConvertFrom-Json
+        $spend = [math]::Round($json.totals.totalCost, 2)
+        $pct = [math]::Round(($spend / 875) * 100, 1)
+        $bar = "#" * [int]($pct / 5)
+        Write-Host "Week: `$$spend / ~`$875"
+        Write-Host "[$bar] $pct`%"
+    } catch { Write-Host "ccusage not available" }
+}
+
+function ds-help {
+    Write-Host ""
+    Write-Host "  DEEPSEEK" -ForegroundColor Yellow
+    Write-Host "  --------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  dsp       DeepSeek v4-Pro   | Opus-tier  | 1M ctx | ~30x cheaper" -ForegroundColor Cyan
+    Write-Host "  dsf       DeepSeek v4-Flash | Haiku-tier | 1M ctx | ~60x cheaper" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  ANTHROPIC" -ForegroundColor Yellow
+    Write-Host "  --------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  cs             Sonnet 4.6"
+    Write-Host "  claude-opus    Opus 4.6"
+    Write-Host "  claude-sonnet  Sonnet 4.6"
+    Write-Host ""
+    Write-Host "  UTILITIES" -ForegroundColor Yellow
+    Write-Host "  --------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  usage                        Weekly Anthropic spend (optional)"
+    Write-Host "  rotate-deepseek-key [key]    Swap API key in both settings files"
+    Write-Host "  ds-help                      Show this menu"
+    Write-Host ""
+    Write-Host "  ONE-SHOT / SCRIPTING" -ForegroundColor Yellow
+    Write-Host "  --------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  deepseek-pro  -p [prompt]   Pro non-interactive"
+    Write-Host "  deepseek-flash -p [prompt]  Flash non-interactive"
+    Write-Host ""
 }
 ```
 
-## 5. Verify
+## 4. Verify
 
 ```powershell
 . $PROFILE
-usage
-dsf -p "say: works"
 dsp -p "say: works"
+dsf -p "say: works"
+ds-help
 ```
 
 ## Rotate Key
