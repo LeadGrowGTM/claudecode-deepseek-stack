@@ -4,6 +4,7 @@ Routes Claude Code through DeepSeek V4 instead of Anthropic — same UI, same sk
 
 **Windows/PowerShell users:** see [docs/POWERSHELL-SETUP.md](docs/POWERSHELL-SETUP.md) for the full setup including throttle-aware session launchers.
 **Subagent routing:** see [docs/SUBAGENT-MAPPING.md](docs/SUBAGENT-MAPPING.md) to map your agent tiers to DeepSeek models.
+**Direct invocation snippets:** see [docs/SNIPPETS.md](docs/SNIPPETS.md) for copy-paste commands to launch Flash or Pro without profile setup.
 
 ## Quick Launch (after setup)
 
