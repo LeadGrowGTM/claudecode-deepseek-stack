@@ -64,10 +64,10 @@ function Get-ThrottleStatus {
 }
 
 function ds-pro {
-    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model deepseek-v4-pro --dangerously-skip-permissions @args
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 --dangerously-skip-permissions @args
 }
 function ds-flash {
-    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model deepseek-v4-flash --dangerously-skip-permissions @args
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 --dangerously-skip-permissions @args
 }
 function claude-sonnet {
     claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
@@ -90,8 +90,8 @@ function cs {
         claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
     }
 }
-function deepseek-pro   { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model deepseek-v4-pro @args }
-function deepseek-flash { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model deepseek-v4-flash @args }
+function deepseek-pro   { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 @args }
+function deepseek-flash { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 @args }
 function rotate-deepseek-key {
     param([string]$NewKey)
     $files = @(

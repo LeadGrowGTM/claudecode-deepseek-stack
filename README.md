@@ -126,7 +126,7 @@ Claude Code respects two configuration keys: `ANTHROPIC_BASE_URL` (where to send
 
 ## Notes & troubleshooting
 
-**Model names:** Both `--model deepseek-v4-pro` and `--model deepseek-v4-flash` work directly. The original Claude model aliases (`sonnet`, `opus`) also work — DeepSeek maps them server-side. Use the explicit DeepSeek names for predictable tier routing.
+**Model names:** Both `--model claude-opus-4-6` and `--model claude-haiku-4-5-20251001` work directly. The original Claude model aliases (`sonnet`, `opus`) also work — DeepSeek maps them server-side. Use the explicit DeepSeek names for predictable tier routing.
 
 **v4-pro vs v4-flash:** Pro is the reasoning tier (Opus-equivalent), Flash is the fast/cheap tier (Haiku-equivalent). For most coding tasks, Flash is fine. Use Pro for planning, architecture, and complex reasoning.
 
