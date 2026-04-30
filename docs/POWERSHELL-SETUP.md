@@ -46,6 +46,8 @@ bun install -g ccusage
 
 Find your profile path: `echo $PROFILE`. Add the following:
 
+> **Why `--add-dir`?** The `--bare` flag (required for auth) also disables CLAUDE.md auto-discovery. Passing `--add-dir` with your workspace path restores CLAUDE.md loading so the model gets full project context. Without it, the system prompt is minimal (~556 tokens) and the model has no knowledge of your workspace rules, identity, or skills.
+
 ```powershell
 function Get-WeeklySpend {
     try {
@@ -64,10 +66,12 @@ function Get-ThrottleStatus {
 }
 
 function ds-pro {
-    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 --dangerously-skip-permissions @args
+    $dir = (Get-Location).Path
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 --dangerously-skip-permissions --add-dir $dir @args
 }
 function ds-flash {
-    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 --dangerously-skip-permissions @args
+    $dir = (Get-Location).Path
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 --dangerously-skip-permissions --add-dir $dir @args
 }
 function claude-sonnet {
     claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
@@ -90,8 +94,14 @@ function cs {
         claude --model claude-sonnet-4-6 --dangerously-skip-permissions @args
     }
 }
-function deepseek-pro   { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 @args }
-function deepseek-flash { claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 @args }
+function deepseek-pro {
+    $dir = (Get-Location).Path
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-pro-settings.json" --model claude-opus-4-6 --add-dir $dir @args
+}
+function deepseek-flash {
+    $dir = (Get-Location).Path
+    claude --bare --settings "$env:USERPROFILE\.config\mg-deepseek\deepseek-flash-settings.json" --model claude-haiku-4-5-20251001 --add-dir $dir @args
+}
 function rotate-deepseek-key {
     param([string]$NewKey)
     $files = @(
@@ -124,8 +134,14 @@ ds-flash -p "say: works"
 ds-pro -p "say: works"
 ```
 
+After launching a session, verify CLAUDE.md loaded by checking the system prompt token count — it should be substantially larger than 556 tokens if the workspace context is being picked up.
+
 ## Rotate Key
 
 ```powershell
 rotate-deepseek-key sk-YOURNEWKEY
 ```
+
+## Context Window Note
+
+Claude Code displays the context window based on the Claude model alias used (`claude-opus-4-6` = 200k). DeepSeek's actual enforced limit depends on their backend. The client-side display will show 200k — this is expected behavior with the compat layer.
